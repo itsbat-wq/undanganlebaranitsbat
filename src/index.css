@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@theme {
+  --font-playfair: "Playfair Display", Georgia, serif;
+  --font-inter: "Inter", system-ui, sans-serif;
+
+  --color-beige: #F5F2ED;
+  --color-beige-dark: #E8E4DD;
+  --color-terracotta: #A65D43;
+  --color-terracotta-dark: #8B4D38;
+  --color-olive: #707A5E;
+  --color-olive-dark: #4A5240;
+  --color-amber: #D97706;
+  --color-amber-light: #F59E0B;
+}
+
+@keyframes dust-float {
+  0% {
+    transform: translateY(100vh) translateX(0);
+    opacity: 0;
+  }
+  5% {
+    opacity: var(--dust-opacity, 0.1);
+  }
+  95% {
+    opacity: var(--dust-opacity, 0.1);
+  }
+  100% {
+    transform: translateY(-10vh) translateX(var(--dust-drift, 20px));
+    opacity: 0;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: #F5F2ED;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: #A65D43;
+  color: white;
+}
