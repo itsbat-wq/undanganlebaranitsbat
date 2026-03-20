@@ -9,27 +9,19 @@ import {
 import confetti from "canvas-confetti";
 
 /* ═══════════════════════════════════════════════════════
-   CONFIGURATION — Ubah sesuai kebutuhan Anda
+   CONFIGURATION — Ubah sesuai kebutuhan
    ═══════════════════════════════════════════════════════ */
-const HOST_NAME = "Keluarga Besar [Nama Anda]";
+const HOST_NAME = "Itsbat";
 const HOST_PHONE = "6281234567890";
-const EVENT_DATE = new Date("2026-03-21T10:00:00+07:00");
-const EVENT_END = new Date("2026-03-21T15:00:00+07:00");
-const EVENT_LOCATION = "Jl. Raya Indah No. 12, Menteng, Jakarta Pusat";
+const EVENT_DATE = new Date("2026-03-22T08:00:00+08:00"); // 22 Maret 2026, 08:00 WITA
+const EVENT_END = new Date("2026-03-22T16:00:00+08:00");
+const EVENT_LOCATION = "Jl. Soekarno Hatta Km. 4";
+const MAPS_URL = "https://maps.app.goo.gl/9ucHiy3NeoXMncKc8";
 const AUDIO_SRC = "/audio/lebaran.mp3";
 
 /* ═══════════════════════════════════════════════════════
    UTILITIES
    ═══════════════════════════════════════════════════════ */
-function getGuestName() {
-  try {
-    const params = new URLSearchParams(window.location.search);
-    return params.get("to") || "Tamu Undangan";
-  } catch {
-    return "Tamu Undangan";
-  }
-}
-
 function calcTimeLeft(target) {
   const diff = Math.max(0, target - Date.now());
   return {
@@ -49,55 +41,9 @@ function useCountdown(target) {
   return t;
 }
 
-function getMapsUrl() {
-  const encoded = encodeURIComponent(EVENT_LOCATION);
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  return isIOS
-    ? `maps://maps.apple.com/?q=${encoded}`
-    : `https://www.google.com/maps/search/?api=1&query=${encoded}`;
-}
-
-function getGCalUrl() {
-  const fmt = (d) =>
-    d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
-  const params = new URLSearchParams({
-    action: "TEMPLATE",
-    text: "Open House Lebaran Hari Kedua",
-    dates: `${fmt(EVENT_DATE)}/${fmt(EVENT_END)}`,
-    details: `Open House Lebaran di kediaman ${HOST_NAME}`,
-    location: EVENT_LOCATION,
-  });
-  return `https://calendar.google.com/calendar/render?${params}`;
-}
-
-function downloadICal() {
-  const fmt = (d) =>
-    d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
-  const ical = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//Undangan Lebaran//ID",
-    "BEGIN:VEVENT",
-    `DTSTART:${fmt(EVENT_DATE)}`,
-    `DTEND:${fmt(EVENT_END)}`,
-    "SUMMARY:Open House Lebaran Hari Kedua",
-    `DESCRIPTION:Open House Lebaran di kediaman ${HOST_NAME}`,
-    `LOCATION:${EVENT_LOCATION}`,
-    "END:VEVENT",
-    "END:VCALENDAR",
-  ].join("\r\n");
-  const blob = new Blob([ical], { type: "text/calendar" });
-  const url = URL.createObjectURL(blob);
-  Object.assign(document.createElement("a"), {
-    href: url,
-    download: "open-house-lebaran.ics",
-  }).click();
-  URL.revokeObjectURL(url);
-}
-
 function fireConfetti() {
   const colors = ["#D97706", "#F59E0B", "#707A5E", "#A65D43"];
-  const end = Date.now() + 3000;
+  const end = Date.now() + 3500;
   (function frame() {
     confetti({
       particleCount: 3,
@@ -136,7 +82,7 @@ function ScrollProgress() {
 }
 
 /* ═══════════════════════════════════════════════════════
-   DUST PARTICLES (Light dust atmosphere)
+   DUST PARTICLES
    ═══════════════════════════════════════════════════════ */
 function DustParticles() {
   const particles = useMemo(
@@ -229,7 +175,7 @@ function MusicToggle({ audioRef }) {
 }
 
 /* ═══════════════════════════════════════════════════════
-   FADE-IN SECTION WRAPPER (scroll-triggered)
+   FADE-IN SECTION WRAPPER
    ═══════════════════════════════════════════════════════ */
 function FadeSection({ children, className = "", delay = 0 }) {
   const ref = useRef(null);
@@ -248,62 +194,105 @@ function FadeSection({ children, className = "", delay = 0 }) {
 }
 
 /* ═══════════════════════════════════════════════════════
-   THE REVEAL — Tirai + Amplop + Segel Lilin
+   CURTAIN FABRIC PANEL (reusable for left/right)
+   ═══════════════════════════════════════════════════════ */
+function CurtainPanel({ side, phase }) {
+  const isLeft = side === "left";
+  return (
+    <motion.div
+      className={`absolute top-0 h-full w-[52%] overflow-hidden ${isLeft ? "left-0" : "right-0"}`}
+      animate={
+        phase === "opening"
+          ? { x: isLeft ? "-108%" : "108%", scaleX: 0.78 }
+          : { x: 0, scaleX: 1 }
+      }
+      transition={{
+        duration: 3,
+        ease: [0.22, 1, 0.36, 1],
+        delay: isLeft ? 0.05 : 0,
+      }}
+      style={{ transformOrigin: isLeft ? "left center" : "right center" }}
+    >
+      <div className="absolute inset-0 bg-terracotta" />
+
+      {/* Fabric fold highlights & shadows */}
+      <div className="absolute left-[12%] top-0 h-full w-6 bg-gradient-to-r from-transparent via-white/[0.04] to-transparent" />
+      <div className="absolute left-[30%] top-0 h-full w-10 bg-gradient-to-r from-black/[0.06] via-transparent to-black/[0.02]" />
+      <div className="absolute left-[50%] top-0 h-full w-5 bg-gradient-to-r from-transparent via-white/[0.035] to-transparent" />
+      <div className="absolute left-[68%] top-0 h-full w-8 bg-gradient-to-r from-black/[0.05] via-transparent to-black/[0.03]" />
+      <div className="absolute left-[85%] top-0 h-full w-5 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent" />
+
+      {/* Edge shadow at center seam */}
+      <div
+        className={`absolute top-0 h-full w-8 ${
+          isLeft
+            ? "right-0 bg-gradient-to-l from-black/20 to-transparent"
+            : "left-0 bg-gradient-to-r from-black/20 to-transparent"
+        }`}
+      />
+
+      {/* Top rod shadow */}
+      <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-black/15 to-transparent" />
+
+      {/* Bottom drape weight */}
+      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/10 to-transparent" />
+
+      {/* Subtle textile texture */}
+      <div
+        className="absolute inset-0 opacity-[0.025]"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg width='4' height='4' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='1' height='1' fill='white'/%3E%3C/svg%3E\")",
+          backgroundSize: "4px 4px",
+        }}
+      />
+    </motion.div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════
+   THE REVEAL — Tirai + Amplop 3D + Segel Lilin
    ═══════════════════════════════════════════════════════ */
 function TheReveal({ audioRef, onComplete }) {
   const [phase, setPhase] = useState("idle");
-  const guestName = getGuestName();
 
   const handleOpen = useCallback(() => {
     if (phase !== "idle") return;
     setPhase("breaking");
 
     setTimeout(() => {
-      setPhase("opening");
       audioRef.current?.play().catch(() => {});
-      fireConfetti();
-    }, 700);
+    }, 900);
 
-    setTimeout(() => onComplete(), 2400);
+    setTimeout(() => {
+      setPhase("opening");
+      fireConfetti();
+    }, 1300);
+
+    setTimeout(() => onComplete(), 4600);
   }, [phase, audioRef, onComplete]);
 
   return (
     <motion.div
       className="fixed inset-0 z-[60]"
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.4 }}
+      transition={{ duration: 0.5 }}
     >
-      {/* Left curtain */}
-      <motion.div
-        className="absolute left-0 top-0 h-full w-1/2 bg-terracotta"
-        animate={phase === "opening" ? { x: "-100%" } : { x: 0 }}
-        transition={{ duration: 1.5, ease: [0.76, 0, 0.24, 1] }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/10" />
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='20' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='white'/%3E%3C/svg%3E\")", backgroundSize: "20px 20px" }} />
-      </motion.div>
+      {/* Curtain panels */}
+      <CurtainPanel side="left" phase={phase} />
+      <CurtainPanel side="right" phase={phase} />
 
-      {/* Right curtain */}
-      <motion.div
-        className="absolute right-0 top-0 h-full w-1/2 bg-terracotta"
-        animate={phase === "opening" ? { x: "100%" } : { x: 0 }}
-        transition={{ duration: 1.5, ease: [0.76, 0, 0.24, 1] }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-l from-transparent to-black/10" />
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='20' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='white'/%3E%3C/svg%3E\")", backgroundSize: "20px 20px" }} />
-      </motion.div>
-
-      {/* Center: Envelope + Seal */}
+      {/* Center: Envelope 3D */}
       <motion.div
         className="relative z-10 flex h-full flex-col items-center justify-center px-8"
         animate={
           phase === "opening"
-            ? { opacity: 0, scale: 0.85 }
-            : { opacity: 1, scale: 1 }
+            ? { opacity: 0, scale: 0.8, y: 30 }
+            : { opacity: 1, scale: 1, y: 0 }
         }
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0.7, ease: "easeInOut" }}
       >
-        {/* Guest Name */}
+        {/* Guest Label */}
         <motion.div
           className="mb-8 text-center"
           initial={{ opacity: 0, y: 20 }}
@@ -314,76 +303,129 @@ function TheReveal({ audioRef, onComplete }) {
             Kepada Yth.
           </p>
           <h2 className="mt-2 font-playfair text-3xl text-beige sm:text-4xl">
-            {guestName}
+            Ahli Surga
           </h2>
         </motion.div>
 
-        {/* Envelope Card */}
+        {/* 3D Envelope */}
         <motion.div
-          className="relative mx-auto w-72 overflow-hidden rounded-2xl bg-beige shadow-2xl sm:w-80"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.8 }}
+          initial={{ opacity: 0, y: 30, rotateX: 20 }}
+          animate={{ opacity: 1, y: 0, rotateX: 6 }}
+          transition={{ delay: 0.6, duration: 1, ease: "easeOut" }}
+          style={{ perspective: 1000 }}
         >
-          {/* Envelope flap */}
           <div
-            className="h-20 bg-beige-dark sm:h-24"
-            style={{ clipPath: "polygon(0 0, 100% 0, 50% 100%)" }}
-          />
-
-          {/* Wax Seal — positioned at the flap's tip */}
-          <motion.button
-            onClick={handleOpen}
-            className="absolute left-1/2 top-[52px] z-20 flex h-16 w-16 -translate-x-1/2 cursor-pointer items-center justify-center rounded-full border-4 border-beige bg-gradient-to-br from-amber-light via-amber to-terracotta shadow-xl sm:top-[60px] sm:h-[70px] sm:w-[70px]"
-            animate={
-              phase === "breaking"
-                ? {
-                    scale: [1, 1.4, 0],
-                    rotate: [0, 12, -25],
-                    opacity: [1, 0.8, 0],
-                  }
-                : { scale: [1, 1.06, 1] }
-            }
-            transition={
-              phase === "breaking"
-                ? { duration: 0.7, ease: "easeInOut" }
-                : { duration: 2.5, repeat: Infinity, ease: "easeInOut" }
-            }
-            whileHover={phase === "idle" ? { scale: 1.12, boxShadow: "0 0 30px rgba(217,119,6,0.35)" } : undefined}
+            className="relative mx-auto w-72 sm:w-80"
+            style={{ transformStyle: "preserve-3d" }}
           >
-            <div className="flex h-11 w-11 items-center justify-center rounded-full border border-white/30">
-              <span className="font-playfair text-xl leading-none text-white">
-                ✦
-              </span>
-            </div>
-          </motion.button>
+            {/* Ground shadow */}
+            <div
+              className="absolute -bottom-7 left-8 right-8 h-10 rounded-[50%] bg-black/30 blur-2xl"
+              style={{ transform: "translateZ(-30px)" }}
+            />
 
-          {/* Envelope body */}
-          <div className="px-6 pb-6 pt-8 text-center">
-            <p className="font-inter text-[10px] tracking-[0.3em] text-olive uppercase">
-              Undangan
-            </p>
-            <div className="mx-auto mt-3 flex items-center justify-center gap-2">
-              <span className="h-px w-6 bg-amber/30" />
-              <span className="text-[10px] text-amber">✦</span>
-              <span className="h-px w-6 bg-amber/30" />
+            {/* Envelope card */}
+            <div
+              className="relative overflow-hidden rounded-2xl bg-beige shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)]"
+              style={{ transform: "translateZ(0)" }}
+            >
+              {/* Flap triangle */}
+              <div className="relative">
+                <div
+                  className="h-24 bg-beige-dark sm:h-28"
+                  style={{
+                    clipPath: "polygon(0 0, 100% 0, 50% 100%)",
+                  }}
+                />
+                {/* Flap depth gradient */}
+                <div
+                  className="absolute inset-0 h-24 sm:h-28"
+                  style={{
+                    clipPath: "polygon(0 0, 100% 0, 50% 100%)",
+                    background:
+                      "linear-gradient(180deg, transparent 20%, rgba(0,0,0,0.06) 100%)",
+                  }}
+                />
+              </div>
+
+              {/* Wax Seal — at flap tip */}
+              <motion.button
+                onClick={handleOpen}
+                className="absolute left-1/2 top-[56px] z-20 flex h-[68px] w-[68px] -translate-x-1/2 cursor-pointer items-center justify-center rounded-full border-[5px] border-beige bg-gradient-to-br from-amber-light via-amber to-terracotta shadow-[0_8px_25px_rgba(217,119,6,0.4)] sm:top-[64px] sm:h-[74px] sm:w-[74px]"
+                animate={
+                  phase === "breaking"
+                    ? {
+                        scale: [1, 1.3, 1.5, 0],
+                        rotate: [0, -8, 15, -30],
+                        opacity: [1, 1, 0.6, 0],
+                      }
+                    : { scale: [1, 1.06, 1] }
+                }
+                transition={
+                  phase === "breaking"
+                    ? { duration: 0.9, ease: "easeInOut" }
+                    : { duration: 2.5, repeat: Infinity, ease: "easeInOut" }
+                }
+                whileHover={
+                  phase === "idle"
+                    ? {
+                        scale: 1.12,
+                        boxShadow: "0 0 35px rgba(217,119,6,0.5)",
+                      }
+                    : undefined
+                }
+              >
+                {/* Concentric ring seal pattern */}
+                <div className="flex h-12 w-12 items-center justify-center rounded-full border-[1.5px] border-white/30">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20">
+                    <span className="font-playfair text-lg leading-none text-white">
+                      ✦
+                    </span>
+                  </div>
+                </div>
+              </motion.button>
+
+              {/* Envelope body */}
+              <div className="px-6 pb-6 pt-10 text-center">
+                <p className="font-inter text-[10px] tracking-[0.3em] text-olive uppercase">
+                  Undangan
+                </p>
+                <div className="mx-auto mt-3 flex items-center justify-center gap-2">
+                  <span className="h-px w-6 bg-amber/30" />
+                  <span className="text-[10px] text-amber">✦</span>
+                  <span className="h-px w-6 bg-amber/30" />
+                </div>
+                <h3 className="mt-3 font-playfair text-lg text-olive-dark">
+                  Open House Lebaran
+                </h3>
+                <p className="mt-1 font-inter text-xs text-olive">
+                  Hari Kedua · 22 Maret 2026
+                </p>
+              </div>
+
+              {/* 3D bottom edge */}
+              <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-b from-beige-dark/60 to-beige-dark" />
             </div>
-            <h3 className="mt-3 font-playfair text-lg text-olive-dark">
-              Open House Lebaran
-            </h3>
-            <p className="mt-1 font-inter text-xs text-olive">
-              Hari Kedua · 21 Maret 2026
-            </p>
+
+            {/* Side thickness illusion */}
+            <div
+              className="absolute -right-[2px] top-4 bottom-4 w-[3px] rounded-r bg-beige-dark/80"
+              style={{ transform: "translateZ(-2px)" }}
+            />
+            <div
+              className="absolute -left-[2px] top-4 bottom-4 w-[3px] rounded-l bg-beige-dark/80"
+              style={{ transform: "translateZ(-2px)" }}
+            />
           </div>
         </motion.div>
 
-        {/* Call-to-action */}
+        {/* CTA pulse */}
         <motion.p
-          className="mt-8 font-inter text-xs tracking-wider text-beige/40"
+          className="mt-10 font-inter text-xs tracking-wider text-beige/40"
           initial={{ opacity: 0 }}
           animate={
             phase === "idle"
-              ? { opacity: [0.3, 0.7, 0.3] }
+              ? { opacity: [0.25, 0.65, 0.25] }
               : { opacity: 0 }
           }
           transition={
@@ -419,7 +461,7 @@ function Hero() {
           transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
         >
           <p className="font-inter text-xs tracking-[0.3em] text-white/60 uppercase">
-            1446 Hijriah
+            1447 Hijriah
           </p>
         </motion.div>
 
@@ -448,15 +490,6 @@ function Hero() {
           transition={{ duration: 1, delay: 1.1, ease: "easeOut" }}
         >
           Mohon Maaf Lahir &amp; Batin
-        </motion.p>
-
-        <motion.p
-          className="mt-5 font-inter text-[11px] tracking-[0.25em] text-white/40 uppercase"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 1.5 }}
-        >
-          Open House — Hari Kedua Lebaran
         </motion.p>
       </div>
 
@@ -524,7 +557,7 @@ function Countdown() {
 }
 
 /* ═══════════════════════════════════════════════════════
-   SAMBUTAN / GREETING
+   SAMBUTAN
    ═══════════════════════════════════════════════════════ */
 function Sambutan() {
   return (
@@ -540,20 +573,76 @@ function Sambutan() {
         <span className="text-[10px] text-amber">✦</span>
         <span className="h-px w-8 bg-amber/30" />
       </div>
-      <p className="mx-auto mt-6 max-w-sm font-inter text-sm leading-relaxed text-olive sm:text-base sm:leading-loose">
-        Dengan penuh rasa syukur kepada Allah SWT atas nikmat dan keberkahan
-        di hari yang fitri ini, kami mengundang Bapak/Ibu/Saudara/i untuk
-        hadir dan berbagi kebahagiaan dalam acara{" "}
-        <strong className="font-medium text-olive-dark">
-          Open House Hari Kedua Lebaran
-        </strong>{" "}
-        di kediaman kami.
+
+      <p className="mx-auto mt-8 max-w-sm font-inter text-sm leading-relaxed text-olive sm:text-base sm:leading-loose">
+        <em className="text-terracotta">
+          &ldquo;Silaturahmi adalah jembatan menuju keberkahan,&rdquo;
+        </em>{" "}
+        begitulah petuah bijak dari seorang filsuf Bulgaria.{" "}
+        <em className="text-terracotta">
+          &ldquo;Sambunglah tali silaturahmi, walaupun dengan senyuman,&rdquo;
+        </em>{" "}
+        sebab{" "}
+        <em className="text-terracotta">
+          &ldquo;Liang lahat adalah tempat yang paling sempit, maka luaskanlah
+          dengan menyambung silaturahmi.&rdquo;
+        </em>
       </p>
-      <p className="mx-auto mt-4 max-w-sm font-inter text-sm leading-relaxed text-olive sm:text-base sm:leading-loose">
-        Kehadiran Anda akan melengkapi kebahagiaan dan menjadikan silaturahmi
-        ini semakin bermakna.
+
+      <p className="mx-auto mt-6 max-w-sm font-inter text-sm leading-relaxed text-olive sm:text-base sm:leading-loose">
+        Menghargai indahnya kebersamaan di hari kemenangan ini, saya{" "}
+        <strong className="font-medium text-olive-dark">{HOST_NAME}</strong>{" "}
+        menantikan kehadiran teman-teman di rumah saya untuk merayakan Open
+        House Hari Kedua Lebaran. Mari kita meluangkan waktu sejenak untuk
+        saling bertegur sapa, bercanda, dan memperluas keberkahan di hari yang
+        suci ini.
       </p>
     </FadeSection>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCROLL HINT — "scroll untuk melihat ديتايل"
+   ═══════════════════════════════════════════════════════ */
+function ScrollHint() {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, amount: 0.5 });
+  return (
+    <motion.div
+      ref={ref}
+      className="py-10 text-center"
+      initial={{ opacity: 0 }}
+      animate={isInView ? { opacity: 1 } : { opacity: 0 }}
+      transition={{ duration: 0.8 }}
+    >
+      <motion.div
+        animate={{ y: [0, 8, 0] }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <p className="font-inter text-sm text-olive">
+          Scroll ke bawah untuk melihat{" "}
+          <span
+            className="font-playfair text-xl font-medium text-terracotta"
+            dir="rtl"
+          >
+            ديتايل
+          </span>
+        </p>
+        <svg
+          className="mx-auto mt-3 h-5 w-5 text-olive/40"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3"
+          />
+        </svg>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -574,7 +663,9 @@ function DetailCard({ icon, label, value, extra }) {
           {value}
         </p>
         {extra && (
-          <p className="mt-0.5 font-inter text-xs text-olive">{extra}</p>
+          <p className="mt-1 font-inter text-xs leading-relaxed text-olive">
+            {extra}
+          </p>
         )}
       </div>
     </div>
@@ -584,11 +675,8 @@ function DetailCard({ icon, label, value, extra }) {
 function EventDetails() {
   return (
     <FadeSection className="px-6 py-16 sm:py-20">
-      <p className="text-center font-inter text-[11px] tracking-[0.3em] text-olive uppercase">
+      <h2 className="text-center font-playfair text-2xl text-olive-dark sm:text-3xl">
         Detail Acara
-      </p>
-      <h2 className="mt-2 text-center font-playfair text-2xl text-olive-dark sm:text-3xl">
-        Informasi Kehadiran
       </h2>
       <div className="mx-auto mt-3 flex items-center justify-center gap-2">
         <span className="h-px w-6 bg-amber/30" />
@@ -604,8 +692,8 @@ function EventDetails() {
             </svg>
           }
           label="Tanggal"
-          value="Sabtu, 21 Maret 2026"
-          extra="Hari Kedua Lebaran · 1 Syawal 1446 H"
+          value="Minggu, 22 Maret 2026"
+          extra="Hari Kedua Lebaran · 2 Syawal 1447 H"
         />
         <DetailCard
           icon={
@@ -614,8 +702,8 @@ function EventDetails() {
             </svg>
           }
           label="Waktu"
-          value="10:00 — 15:00 WIB"
-          extra="Makan siang tersedia"
+          value="08:00 — 16:00 WITA"
+          extra="InsyAllah tersedia makanan dari western, asia sampai timur tengah"
         />
         <DetailCard
           icon={
@@ -625,78 +713,27 @@ function EventDetails() {
             </svg>
           }
           label="Lokasi"
-          value={EVENT_LOCATION.split(",")[0]}
-          extra={EVENT_LOCATION.split(",").slice(1).join(",").trim()}
+          value={EVENT_LOCATION}
         />
       </div>
 
-      {/* Smart Navigation Button */}
+      {/* Lokesyen button */}
       <div className="mt-8 flex justify-center">
         <motion.a
-          href={getMapsUrl()}
+          href={MAPS_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2.5 rounded-full bg-olive-dark px-6 py-3 font-inter text-sm font-medium text-beige shadow-md"
+          className="inline-flex items-center gap-2.5 rounded-full bg-olive-dark px-6 py-3 shadow-md"
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+          <svg className="h-4 w-4 text-beige" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
           </svg>
-          Petunjuk Lokasi
+          <span className="font-playfair text-sm italic text-beige">
+            Lokesyen
+          </span>
         </motion.a>
-      </div>
-    </FadeSection>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════
-   SAVE THE DATE — Google Calendar + iCal
-   ═══════════════════════════════════════════════════════ */
-function SaveTheDate() {
-  return (
-    <FadeSection className="px-6 py-16 text-center sm:py-20">
-      <p className="font-inter text-[11px] tracking-[0.3em] text-olive uppercase">
-        Simpan Tanggal
-      </p>
-      <h2 className="mt-2 font-playfair text-2xl text-olive-dark sm:text-3xl">
-        Save the Date
-      </h2>
-      <div className="mx-auto mt-3 flex items-center justify-center gap-2">
-        <span className="h-px w-6 bg-amber/30" />
-        <span className="text-[10px] text-amber">✦</span>
-        <span className="h-px w-6 bg-amber/30" />
-      </div>
-      <p className="mx-auto mt-5 max-w-xs font-inter text-sm text-olive">
-        Tambahkan ke kalender Anda agar tidak terlewat.
-      </p>
-
-      <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-        <motion.a
-          href={getGCalUrl()}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white/70 px-5 py-3 font-inter text-sm font-medium text-olive-dark shadow-sm backdrop-blur-sm sm:w-auto"
-          whileHover={{ scale: 1.03, backgroundColor: "rgba(255,255,255,0.9)" }}
-          whileTap={{ scale: 0.97 }}
-        >
-          <svg className="h-4 w-4 text-terracotta" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-          </svg>
-          Google Calendar
-        </motion.a>
-
-        <motion.button
-          onClick={downloadICal}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white/70 px-5 py-3 font-inter text-sm font-medium text-olive-dark shadow-sm backdrop-blur-sm sm:w-auto"
-          whileHover={{ scale: 1.03, backgroundColor: "rgba(255,255,255,0.9)" }}
-          whileTap={{ scale: 0.97 }}
-        >
-          <svg className="h-4 w-4 text-terracotta" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-          </svg>
-          Apple / iCal
-        </motion.button>
       </div>
     </FadeSection>
   );
@@ -706,12 +743,12 @@ function SaveTheDate() {
    MASONRY PHOTO GALLERY
    ═══════════════════════════════════════════════════════ */
 const PHOTOS = [
-  { url: "https://images.unsplash.com/photo-1590076215667-875c2d76b544?w=600&q=80", alt: "Persiapan Lebaran", span: "row-span-2" },
-  { url: "https://images.unsplash.com/photo-1567529692333-de9fd6772897?w=600&q=80", alt: "Dekorasi Rumah", span: "" },
-  { url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=80", alt: "Hidangan Spesial", span: "" },
-  { url: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&q=80", alt: "Sajian Lebaran", span: "col-span-2" },
-  { url: "https://images.unsplash.com/photo-1533777324565-a040eb52facd?w=600&q=80", alt: "Kue Lebaran", span: "row-span-2" },
-  { url: "https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=600&q=80", alt: "Silaturahmi", span: "" },
+  { url: "/photos/photo1.jpeg", alt: "Foto 1", span: "row-span-2" },
+  { url: "/photos/photo2.jpeg", alt: "Foto 2", span: "" },
+  { url: "/photos/photo3.jpeg", alt: "Foto 3", span: "" },
+  { url: "/photos/photo4.jpeg", alt: "Foto 4", span: "col-span-2" },
+  { url: "/photos/photo5.jpeg", alt: "Foto 5", span: "row-span-2" },
+  { url: "/photos/photo6.jpeg", alt: "Foto 6", span: "" },
 ];
 
 function Gallery() {
@@ -744,113 +781,9 @@ function Gallery() {
               className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-            <p className="absolute bottom-0 left-0 w-full translate-y-full p-3 font-inter text-[11px] tracking-wider text-white/90 transition-transform duration-500 group-hover:translate-y-0">
-              {p.alt}
-            </p>
           </motion.div>
         ))}
       </div>
-    </FadeSection>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════
-   DIGITAL GUEST BOOK — Form → WhatsApp
-   ═══════════════════════════════════════════════════════ */
-function GuestBook() {
-  const guestName = getGuestName();
-  const [name, setName] = useState(
-    guestName !== "Tamu Undangan" ? guestName : "",
-  );
-  const [message, setMessage] = useState("");
-  const [attendance, setAttendance] = useState("hadir");
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const status =
-      attendance === "hadir"
-        ? "Insya Allah akan hadir"
-        : "Mohon maaf berhalangan hadir";
-    const text = encodeURIComponent(
-      `Halo ${HOST_NAME},\n\nSaya *${name}* ingin mengucapkan:\n"${message}"\n\n${status} di acara Open House Lebaran hari kedua.\nTerima kasih atas undangannya! 🙏`,
-    );
-    window.open(`https://wa.me/${HOST_PHONE}?text=${text}`, "_blank");
-  };
-
-  return (
-    <FadeSection className="px-6 py-16 sm:py-20">
-      <p className="text-center font-inter text-[11px] tracking-[0.3em] text-olive uppercase">
-        Buku Tamu
-      </p>
-      <h2 className="mt-2 text-center font-playfair text-2xl text-olive-dark sm:text-3xl">
-        Ucapan &amp; Kehadiran
-      </h2>
-      <div className="mx-auto mt-3 flex items-center justify-center gap-2">
-        <span className="h-px w-6 bg-amber/30" />
-        <span className="text-[10px] text-amber">✦</span>
-        <span className="h-px w-6 bg-amber/30" />
-      </div>
-
-      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Nama Anda"
-          required
-          className="w-full rounded-xl border border-beige-dark bg-white/60 px-4 py-3 font-inter text-sm text-olive-dark outline-none backdrop-blur-sm transition-all placeholder:text-olive/40 focus:border-terracotta/40 focus:ring-2 focus:ring-terracotta/10"
-        />
-        <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Tulis ucapan & doa Anda..."
-          required
-          rows={3}
-          className="w-full resize-none rounded-xl border border-beige-dark bg-white/60 px-4 py-3 font-inter text-sm text-olive-dark outline-none backdrop-blur-sm transition-all placeholder:text-olive/40 focus:border-terracotta/40 focus:ring-2 focus:ring-terracotta/10"
-        />
-
-        {/* Attendance Radio */}
-        <div className="flex gap-3">
-          <label className="flex-1 cursor-pointer">
-            <input
-              type="radio"
-              name="attendance"
-              value="hadir"
-              checked={attendance === "hadir"}
-              onChange={() => setAttendance("hadir")}
-              className="peer sr-only"
-            />
-            <div className="rounded-xl border-2 border-transparent bg-white/60 px-4 py-3 text-center font-inter text-sm text-olive shadow-sm transition-all peer-checked:border-terracotta peer-checked:bg-terracotta/10 peer-checked:text-terracotta">
-              Akan Hadir
-            </div>
-          </label>
-          <label className="flex-1 cursor-pointer">
-            <input
-              type="radio"
-              name="attendance"
-              value="tidak"
-              checked={attendance === "tidak"}
-              onChange={() => setAttendance("tidak")}
-              className="peer sr-only"
-            />
-            <div className="rounded-xl border-2 border-transparent bg-white/60 px-4 py-3 text-center font-inter text-sm text-olive shadow-sm transition-all peer-checked:border-terracotta peer-checked:bg-terracotta/10 peer-checked:text-terracotta">
-              Berhalangan
-            </div>
-          </label>
-        </div>
-
-        <motion.button
-          type="submit"
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-terracotta py-3.5 font-inter text-sm font-medium text-beige shadow-lg"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-          </svg>
-          Kirim Ucapan via WhatsApp
-        </motion.button>
-      </form>
     </FadeSection>
   );
 }
@@ -860,39 +793,21 @@ function GuestBook() {
    ═══════════════════════════════════════════════════════ */
 function Footer() {
   return (
-    <footer className="bg-olive-dark px-6 py-16 text-center sm:py-20">
-      <div className="mx-auto max-w-md">
-        <div className="mb-5 flex items-center justify-center gap-3">
-          <span className="h-px w-8 bg-white/15" />
-          <span className="text-amber text-xs">✦</span>
-          <span className="h-px w-8 bg-white/15" />
-        </div>
-
-        <p className="font-inter text-[10px] tracking-[0.3em] text-white/30 uppercase">
-          Dengan penuh kasih
-        </p>
-
-        <h3 className="mt-4 font-playfair text-2xl font-medium text-white/90 sm:text-3xl">
-          {HOST_NAME.split("[")[0]}
-          <br />
-          <span className="text-amber">{HOST_NAME.includes("[") ? "[Nama Anda]" : ""}</span>
-        </h3>
-
-        <div className="mt-8 h-px w-full bg-white/10" />
-
-        <p className="mt-6 font-inter text-[11px] text-white/25">
-          Idul Fitri 1446 H · Hari Kedua Lebaran
-        </p>
-        <p className="mt-2 font-inter text-[10px] text-white/15">
-          Dibuat dengan ❤️
-        </p>
+    <footer className="bg-olive-dark px-6 py-12 text-center">
+      <div className="mx-auto flex items-center justify-center gap-3">
+        <span className="h-px w-8 bg-white/15" />
+        <span className="text-xs text-amber">✦</span>
+        <span className="h-px w-8 bg-white/15" />
       </div>
+      <p className="mt-4 font-playfair text-sm text-white/30">
+        Idul Fitri 1447 H
+      </p>
     </footer>
   );
 }
 
 /* ═══════════════════════════════════════════════════════
-   APP — Main Entry
+   APP
    ═══════════════════════════════════════════════════════ */
 export default function App() {
   const [revealed, setRevealed] = useState(false);
@@ -911,10 +826,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-beige font-inter text-olive-dark">
-      {/* Background Music (placeholder — ganti dengan file audio Anda) */}
       <audio ref={audioRef} src={AUDIO_SRC} loop preload="auto" />
 
-      {/* The Reveal: Curtain + Envelope */}
       <AnimatePresence>
         {!revealed && (
           <TheReveal
@@ -925,7 +838,6 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Main Content */}
       {revealed && (
         <>
           <ScrollProgress />
@@ -936,10 +848,9 @@ export default function App() {
             <Hero />
             <Countdown />
             <Sambutan />
+            <ScrollHint />
             <EventDetails />
-            <SaveTheDate />
             <Gallery />
-            <GuestBook />
           </div>
 
           <Footer />
